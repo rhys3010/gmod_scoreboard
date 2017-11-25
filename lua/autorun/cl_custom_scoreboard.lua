@@ -13,7 +13,7 @@ local RedPlayerList = nil
 local BluePlayerList = nil
 local PlayerScrollPanel = nil
 local PlayerList = nil
-
+local ContextMenu = nil
 -- Color Constants
 local COLOR_RED = Color(255, 51, 51, 200)
 local COLOR_BLUE = Color(0, 102, 255, 200)
@@ -114,9 +114,41 @@ function createPlayerList()
       draw.RoundedBox(0, 0, 40, PlayerList:GetWide(), 10, COLOR_GREEN)
       draw.RoundedBox(0, 0, PlayerList:GetTall()-10, PlayerList:GetWide(), 10, COLOR_GREEN)
     end
+  end
+end
 
+--[[
+* Create the context menu that will be opened on right click of player panel
+]]
+function createContextMenu(parent, ply)
+  ContextMenu = vgui.Create("DMenu", parent)
+
+  -- Add menu options
+  -- Copy Steam ID to clipboard
+  local SteamID = ContextMenu:AddOption("Get SteamID")
+  SteamID:SetIcon("icon16/page_paste.png")
+  SteamID.DoClick = function()
+    -- Copy steam ID to clipboard
+    SetClipboardText(ply:SteamID())
+    -- Show notification and play sound
+    notification.AddLegacy(ply:GetName().."'s SteamID Copied to Clipboard!", NOTIFY_CLEANUP, 3)
+    surface.PlaySound("buttons/button15.wav")
   end
 
+  -- Open player's steam profile in steam overlay
+  local SteamProfile = ContextMenu:AddOption("View Steam Profile")
+  SteamProfile:SetIcon("icon16/world_link.png")
+  SteamProfile.DoClick = function()
+    -- Verify that account exists
+    if(ply:SteamID64() != nil) then
+      -- Open player's community profile
+      gui.OpenURL("http://steamcommunity.com/profiles/"..ply:SteamID64())
+    else
+      notification.AddLegacy("Steam Profile Doesn't Exist!", NOTIFY_ERROR, 3)
+    end
+  end
+
+  ContextMenu:Open()
 end
 
 --[[
@@ -199,10 +231,21 @@ function createPlayerPanel(ply, team)
   end
 
   if IsValid(PlayerPanel) then
+    -- Create Avatar
     local PlayerAvatar = vgui.Create("AvatarImage", PlayerPanel)
     PlayerAvatar:SetSize(32, 32)
     PlayerAvatar:SetPos(10, 4)
     PlayerAvatar:SetPlayer(ply, 32)
+
+    -- Create Invisible Button to house the context menu
+    local MenuBtn = vgui.Create("DButton", PlayerPanel)
+    MenuBtn:SetAlpha(0)
+    MenuBtn:SetPos(0, 0)
+    MenuBtn:SetSize(PlayerPanel:GetWide(), PlayerPanel:GetTall())
+    MenuBtn.DoRightClick = function()
+      -- Create menu at current mouse position
+      createContextMenu(MenuBtn, ply)
+    end
   end
 end
 
@@ -266,6 +309,9 @@ hook.Add("ScoreboardShow", "Open Scoreboard", ShowScoreboard)
 function HideScoreboard()
   if IsValid(Scoreboard) then
     Scoreboard:Hide()
+    if(IsValid(ContextMenu)) then
+      ContextMenu:Hide()
+    end
   end
 end
 
