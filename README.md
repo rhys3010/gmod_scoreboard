@@ -4,7 +4,7 @@
 
 Configurable Garry's Mod Scoreboard, can be changed to Team Mode or Free for All mode.
 
-![alt text](https://i.imgur.com/VpT6Nd5.jpg "Scoreboard")
+![alt text](https://i.imgur.com/tYqHEtt.png "Scoreboard")
 
 ## Features
 
